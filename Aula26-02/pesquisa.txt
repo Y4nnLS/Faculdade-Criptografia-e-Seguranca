@@ -13,3 +13,47 @@ Regras -
 Para hoje:
 - Conceito + Imagem de segurança em camadas
 - Estrutura do Relatório
+
+Capa:
+    Título do relatório.
+    Nome da instituição ou empresa.
+    Nome do autor ou equipe.
+    Data de conclusão.
+
+Resumo ou Sumário Executivo:
+    Breve resumo do relatório.
+    Objetivos, métodos e conclusões.
+
+Índice (opcional):
+    Lista de seções e subseções com números de página correspondentes.
+
+Introdução:
+    Contextualização do problema.
+    Objetivos do relatório.
+    Metodologia utilizada.
+
+Desenvolvimento:
+    Seções e subseções organizadas logicamente.
+    Detalhes sobre métodos, processos, experimentos, etc.
+
+Resultados:
+    Apresentação dos dados coletados.
+    Gráficos, tabelas, figuras.
+
+Discussão:
+    Análise e interpretação dos resultados.
+    Comparação com teorias existentes.
+    Discussão de limitações.
+
+Conclusão:
+    Recapitulação dos principais pontos.
+    Conclusões alcançadas.
+
+Recomendações (se aplicável):
+    Sugestões práticas baseadas nos resultados.
+
+Referências:
+    Citações de todas as fontes usadas no relatório.
+
+Anexos e Apêndices:
+    Documentos adicionais, dados suplementares.
