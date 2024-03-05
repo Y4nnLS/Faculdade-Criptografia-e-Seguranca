@@ -1,0 +1,15 @@
+Atividade 1 - 
+1. oq é? (GPT)
+2. forma (organização) (GPT + typeset.io)
+3. Quas partes do sistema de segurança do sistema em camadas são candidatas ao uso de criptografia (Autores e autoria)
+4. Qual parte do sistema de segurança em camadas é recomendada para uso (fortemente) de criptografia
+
+Regras - 
+- embasado por Autores
+- organizado como relatorio tecnico (GPT)
+- resumo redigido ao final com GPT
+- apresentação de slides com GPT ou copiloto do Edge
+
+Para hoje:
+- Conceito + Imagem de segurança em camadas
+- Estrutura do Relatório
