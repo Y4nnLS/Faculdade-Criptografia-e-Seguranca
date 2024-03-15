@@ -19,7 +19,7 @@ const uint32_t k[64] = {
 
 void sha256(const unsigned char *message, uint32_t len, uint8_t *digest) {
     uint32_t i, j;
-    uint8_t hash[SHA256_DIGEST_SIZE];
+    // uint8_t hash[SHA256_DIGEST_SIZE];
     uint32_t h0, h1, h2, h3, h4, h5, h6, h7;
     uint32_t a, b, c, d, e, f, g, h;
     uint32_t *w, *words;
@@ -127,8 +127,8 @@ int main() {
     const unsigned char data[] = "Hello, world!";
     const unsigned char key[] = "secretkey";
     unsigned char digest[SHA256_DIGEST_SIZE];
-
-    hmac_sha256(data, strlen(data), key, strlen(key), digest);
+    
+    hmac_sha256(data, strlen((const char *)data), key, strlen((const char *)key), digest);
 
     printf("HMAC SHA256: ");
     for (int i = 0; i < SHA256_DIGEST_SIZE; i++) {
