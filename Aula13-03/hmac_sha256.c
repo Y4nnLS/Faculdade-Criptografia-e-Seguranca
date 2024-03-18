@@ -1,140 +1,143 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <stdint.h>
+#include <string.h>
 
 #define SHA256_BLOCK_SIZE 64
 #define SHA256_DIGEST_SIZE 32
 
-const uint32_t k[64] = {
-    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
-};
+void sha256_transform(uint32_t *state, const unsigned char *data);
+void sha256(const unsigned char *message, unsigned int len, unsigned char *digest);
+void hmac_sha256(const unsigned char *key, unsigned int key_len, const unsigned char *message, unsigned int message_len, unsigned char *digest);
 
-void sha256(const unsigned char *message, uint32_t len, uint8_t *digest) {
-    uint32_t i, j;
-    // uint8_t hash[SHA256_DIGEST_SIZE];
-    uint32_t h0, h1, h2, h3, h4, h5, h6, h7;
-    uint32_t a, b, c, d, e, f, g, h;
-    uint32_t *w, *words;
-    uint32_t num_blocks = ((len + 8) / SHA256_BLOCK_SIZE) + 1;
-    uint8_t *padded_message = (uint8_t *)malloc(num_blocks * SHA256_BLOCK_SIZE);
-    
-    for (i = 0; i < len; i++)
-        padded_message[i] = message[i];
-    padded_message[len] = 0x80;
-    for (i = len + 1; i < num_blocks * SHA256_BLOCK_SIZE; i++)
-        padded_message[i] = 0;
-    len *= 8;
-    padded_message[num_blocks * SHA256_BLOCK_SIZE - 1] = len;
-    words = (uint32_t *)padded_message;
-
-    for (i = 0; i < num_blocks; i++) {
-        w = words + i * 16;
-        for (j = 0; j < 16; j++)
-            w[j] = (w[j] >> 24) | ((w[j] >> 8) & 0x0000FF00) | ((w[j] << 8) & 0x00FF0000) | (w[j] << 24);
+void sha256_transform(uint32_t *state, const unsigned char *data) {
+    uint32_t temp1, temp2, a, b, c, d, e, f, g, h, i;
+    uint32_t m[64];
+    uint32_t w[64];
+    for (i = 0; i < 16; ++i) {
+        m[i] = ((uint32_t)data[i * 4] << 24) | ((uint32_t)data[i * 4 + 1] << 16) |
+               ((uint32_t)data[i * 4 + 2] << 8) | ((uint32_t)data[i * 4 + 3]);
     }
-
-    h0 = 0x6a09e667;
-    h1 = 0xbb67ae85;
-    h2 = 0x3c6ef372;
-    h3 = 0xa54ff53a;
-    h4 = 0x510e527f;
-    h5 = 0x9b05688c;
-    h6 = 0x1f83d9ab;
-    h7 = 0x5be0cd19;
-
-    for (i = 0; i < num_blocks; i++) {
-        w = words + (i * 16);
-        for (j = 16; j < 64; j++) {
-            w[j] = w[j - 16] + (w[j - 7] >> 3) + w[j - 15] + (w[j - 2] >> 10);
-        }
-        a = h0;
-        b = h1;
-        c = h2;
-        d = h3;
-        e = h4;
-        f = h5;
-        g = h6;
-        h = h7;
-        for (j = 0; j < 64; j++) {
-            uint32_t temp1 = h + ((e >> 6) | (e << 26)) + ((e & f) ^ (~e & g)) + k[j] + w[j];
-            uint32_t temp2 = ((a >> 2) | (a << 30)) + ((a & b) ^ (a & c) ^ (b & c));
-            h = g;
-            g = f;
-            f = e;
-            e = d + temp1;
-            d = c;
-            c = b;
-            b = a;
-            a = temp1 + temp2;
-        }
-        h0 += a;
-        h1 += b;
-        h2 += c;
-        h3 += d;
-        h4 += e;
-        h5 += f;
-        h6 += g;
-        h7 += h;
+    for (; i < 64; ++i) {
+        m[i] = m[i - 16] + (m[i - 15] >> 7 ^ m[i - 15] >> 18 ^ m[i - 15] >> 3) + m[i - 7] +
+               (m[i - 2] >> 17 ^ m[i - 2] >> 19 ^ m[i - 2] >> 10);
     }
-
-    memcpy(digest, &h0, 4);
-    memcpy(digest + 4, &h1, 4);
-    memcpy(digest + 8, &h2, 4);
-    memcpy(digest + 12, &h3, 4);
-    memcpy(digest + 16, &h4, 4);
-    memcpy(digest + 20, &h5, 4);
-    memcpy(digest + 24, &h6, 4);
-    memcpy(digest + 28, &h7, 4);
-    
-    free(padded_message);
+    a = state[0];
+    b = state[1];
+    c = state[2];
+    d = state[3];
+    e = state[4];
+    f = state[5];
+    g = state[6];
+    h = state[7];
+    for (i = 0; i < 64; ++i) {
+        temp1 = h + (f >> 6 ^ f >> 11 ^ f >> 25) + (f & g ^ ~f & h) + 0x428a2f98 + m[i];
+        temp2 = (a >> 2 ^ a >> 13 ^ a >> 22) + (a & b ^ a & c ^ b & c);
+        h = g;
+        g = f;
+        f = e;
+        e = d + temp1;
+        d = c;
+        c = b;
+        b = a;
+        a = temp1 + temp2;
+    }
+    state[0] += a;
+    state[1] += b;
+    state[2] += c;
+    state[3] += d;
+    state[4] += e;
+    state[5] += f;
+    state[6] += g;
+    state[7] += h;
 }
 
-void hmac_sha256(const unsigned char *message, int message_len, const unsigned char *key, int key_len, unsigned char *digest) {
-    unsigned char k[SHA256_BLOCK_SIZE];
-    if (key_len > SHA256_BLOCK_SIZE) {
-        sha256(key, key_len, k);
-        key_len = SHA256_DIGEST_SIZE;
-    } else {
-        memcpy(k, key, key_len);
+void sha256(const unsigned char *message, unsigned int len, unsigned char *digest) {
+    uint32_t state[8] = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
+    unsigned int i;
+    unsigned int offset = 0;
+    unsigned int n = len / 64;
+    unsigned char block[SHA256_BLOCK_SIZE];
+    for (i = 0; i < n; ++i) {
+        memcpy(block, message + offset, SHA256_BLOCK_SIZE);
+        sha256_transform(state, block);
+        offset += SHA256_BLOCK_SIZE;
     }
-    for (int i = 0; i < SHA256_BLOCK_SIZE; i++)
-        k[i] ^= 0x36;
+    memset(block, 0, SHA256_BLOCK_SIZE);
+    memcpy(block, message + offset, len % 64);
+    block[len % 64] = 0x80;
+    if (len % 64 >= 56) {
+        sha256_transform(state, block);
+        memset(block, 0, SHA256_BLOCK_SIZE);
+    }
+    *((uint64_t *)(block + 56)) = len * 8;
+    sha256_transform(state, block);
+    for (i = 0; i < 8; ++i) {
+        digest[i * 4 + 0] = (state[i] >> 24) & 0xFF;
+        digest[i * 4 + 1] = (state[i] >> 16) & 0xFF;
+        digest[i * 4 + 2] = (state[i] >> 8) & 0xFF;
+        digest[i * 4 + 3] = (state[i] >> 0) & 0xFF;
+    }
+}
 
-    unsigned char inner_digest[SHA256_DIGEST_SIZE];
-    sha256(k, SHA256_BLOCK_SIZE, inner_digest);
-    
-    for (int i = 0; i < SHA256_BLOCK_SIZE; i++)
-        k[i] ^= (0x36 ^ 0x5c);
+void hmac_sha256(const unsigned char *key, unsigned int key_len, const unsigned char *message, unsigned int message_len, unsigned char *digest) {
+    unsigned char k_ipad[SHA256_BLOCK_SIZE];
+    unsigned char k_opad[SHA256_BLOCK_SIZE];
+    unsigned char tk[SHA256_DIGEST_SIZE];
+    unsigned int i;
+    if (key_len > SHA256_BLOCK_SIZE) {
+        sha256(key, key_len, tk);
+        key = tk;
+        key_len = SHA256_DIGEST_SIZE;
+    }
+    memcpy(k_ipad, key, key_len);
+    memset(k_ipad + key_len, 0, SHA256_BLOCK_SIZE - key_len);
+    memcpy(k_opad, key, key_len);
+    memset(k_opad + key_len, 0, SHA256_BLOCK_SIZE - key_len);
+    for (i = 0; i < SHA256_BLOCK_SIZE; ++i) {
+        k_ipad[i] ^= 0x36;
+        k_opad[i] ^= 0x5C;
+    }
+    sha256(k_ipad, SHA256_BLOCK_SIZE, digest);
+    memcpy(k_ipad, digest, SHA256_DIGEST_SIZE);
+    memcpy(k_ipad + SHA256_DIGEST_SIZE, message, message_len);
+    sha256(k_ipad, SHA256_BLOCK_SIZE, digest);
+    sha256(k_opad, SHA256_BLOCK_SIZE, tk);
+    for (i = 0; i < SHA256_DIGEST_SIZE; ++i) {
+        digest[i] = tk[i];
+    }
+}
 
-    unsigned char *inner_message = (unsigned char *)malloc(message_len + SHA256_BLOCK_SIZE);
-    memcpy(inner_message, inner_digest, SHA256_DIGEST_SIZE);
-    memcpy(inner_message + SHA256_DIGEST_SIZE, message, message_len);
+// Função para verificar a autenticidade da mensagem
+int verify_hmac_sha256(const unsigned char *key, unsigned int key_len, const unsigned char *message, unsigned int message_len, const unsigned char *received_digest) {
+    unsigned char calculated_digest[SHA256_DIGEST_SIZE];
 
-    sha256(inner_message, message_len + SHA256_BLOCK_SIZE, digest);
-    
-    free(inner_message);
+    // Calcula o HMAC SHA256 da mensagem recebida
+    hmac_sha256(key, key_len, message, message_len, calculated_digest);
+
+    // Compara o resultado com o HMAC SHA256 originalmente fornecido
+    return memcmp(calculated_digest, received_digest, SHA256_DIGEST_SIZE) == 0;
 }
 
 int main() {
-    const unsigned char data[] = "Hello, world!";
-    const unsigned char key[] = "secretkey";
-    unsigned char digest[SHA256_DIGEST_SIZE];
-    
-    hmac_sha256(data, strlen((const char *)data), key, strlen((const char *)key), digest);
+    const unsigned char *key = (unsigned char *)"a";
+    const unsigned char *data = (unsigned char *)"a";
+    unsigned char hash[SHA256_DIGEST_SIZE];
+
+    // Codificação HMAC SHA256
+    hmac_sha256(key, strlen((const char *)key), data, strlen((const char *)data), hash);
 
     printf("HMAC SHA256: ");
     for (int i = 0; i < SHA256_DIGEST_SIZE; i++) {
-        printf("%02x", digest[i]);
+        printf("%02x", hash[i]);
     }
     printf("\n");
+
+    // Verificação de autenticidade
+    if (verify_hmac_sha256(key, strlen((const char *)key), data, strlen((const char *)data), hash)) {
+        printf("Mensagem autenticada.\n");
+    } else {
+        printf("Mensagem não autenticada.\n");
+    }
 
     return 0;
 }
