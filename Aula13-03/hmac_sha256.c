@@ -109,7 +109,7 @@ void hmac_sha256(const unsigned char *key, unsigned int key_len, const unsigned 
 
 int main() {
     const unsigned char *key = (unsigned char *)"a";
-    const unsigned char *data = (unsigned char *)"a";
+    const unsigned char *data = (unsigned char *)"123456";
     unsigned char hash[SHA256_DIGEST_SIZE];
 
     // Codificação HMAC SHA256
