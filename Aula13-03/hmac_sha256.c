@@ -107,17 +107,6 @@ void hmac_sha256(const unsigned char *key, unsigned int key_len, const unsigned 
     }
 }
 
-// Função para verificar a autenticidade da mensagem
-int verify_hmac_sha256(const unsigned char *key, unsigned int key_len, const unsigned char *message, unsigned int message_len, const unsigned char *received_digest) {
-    unsigned char calculated_digest[SHA256_DIGEST_SIZE];
-
-    // Calcula o HMAC SHA256 da mensagem recebida
-    hmac_sha256(key, key_len, message, message_len, calculated_digest);
-
-    // Compara o resultado com o HMAC SHA256 originalmente fornecido
-    return memcmp(calculated_digest, received_digest, SHA256_DIGEST_SIZE) == 0;
-}
-
 int main() {
     const unsigned char *key = (unsigned char *)"a";
     const unsigned char *data = (unsigned char *)"a";
@@ -131,13 +120,6 @@ int main() {
         printf("%02x", hash[i]);
     }
     printf("\n");
-
-    // Verificação de autenticidade
-    if (verify_hmac_sha256(key, strlen((const char *)key), data, strlen((const char *)data), hash)) {
-        printf("Mensagem autenticada.\n");
-    } else {
-        printf("Mensagem não autenticada.\n");
-    }
-
+    
     return 0;
 }
