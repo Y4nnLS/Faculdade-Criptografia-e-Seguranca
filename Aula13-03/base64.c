@@ -77,7 +77,7 @@ unsigned char *base64_decode(const char *data, size_t input_length, size_t *outp
 }
 
 int main() {
-    const char *original_string = "Man";
+    const char *original_string = "a";
     size_t original_length = strlen(original_string);
     size_t encoded_length;
     char *encoded_string = base64_encode((const unsigned char *)original_string, original_length);
