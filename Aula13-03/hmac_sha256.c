@@ -12,7 +12,7 @@ void hmac_sha256(const unsigned char *key, unsigned int key_len, const unsigned 
 void sha256_transform(uint32_t *state, const unsigned char *data) {
     uint32_t temp1, temp2, a, b, c, d, e, f, g, h, i;
     uint32_t m[64];
-    uint32_t w[64];
+    // uint32_t w[64];
     for (i = 0; i < 16; ++i) {
         m[i] = ((uint32_t)data[i * 4] << 24) | ((uint32_t)data[i * 4 + 1] << 16) |
                ((uint32_t)data[i * 4 + 2] << 8) | ((uint32_t)data[i * 4 + 3]);
@@ -30,8 +30,8 @@ void sha256_transform(uint32_t *state, const unsigned char *data) {
     g = state[6];
     h = state[7];
     for (i = 0; i < 64; ++i) {
-        temp1 = h + (f >> 6 ^ f >> 11 ^ f >> 25) + (f & g ^ ~f & h) + 0x428a2f98 + m[i];
-        temp2 = (a >> 2 ^ a >> 13 ^ a >> 22) + (a & b ^ a & c ^ b & c);
+        temp1 = h + ((f >> 6) ^ (f >> 11) ^ (f >> 25)) + ((f & g) ^ (~f & h)) + 0x428a2f98 + m[i];
+        temp2 = ((a >> 2) ^ (a >> 13) ^ (a >> 22)) + ((a & b) ^ (a & c) ^ (b & c));
         h = g;
         g = f;
         f = e;
@@ -109,7 +109,7 @@ void hmac_sha256(const unsigned char *key, unsigned int key_len, const unsigned 
 
 int main() {
     const unsigned char *key = (unsigned char *)"a";
-    const unsigned char *data = (unsigned char *)"123456";
+    const unsigned char *data = (unsigned char *)"a";
     unsigned char hash[SHA256_DIGEST_SIZE];
 
     // Codificação HMAC SHA256
