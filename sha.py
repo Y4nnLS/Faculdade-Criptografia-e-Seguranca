@@ -25,7 +25,7 @@ class Sha256:
 
     M32 = 0xFFFFFFFF
 
-    def _init_(self, m=None):
+    def __init__(self, m=None):
         self.mlen = 0
         self.buf = b''
         self.k = self.ks[:]
@@ -107,11 +107,59 @@ class Sha256:
         tab = '0123456789abcdef'
         return ''.join(tab[b >> 4] + tab[b & 0xF] for b in self.digest())
 
+# Classe Sha256 e definições de funções permanecem as mesmas
+
+# Define o conjunto de caracteres possíveis para tentativa de força bruta
+# Classe Sha256 e definições de funções permanecem as mesmas
+
+# Define o conjunto de caracteres possíveis para tentativa de força bruta
+charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+
 # Função para calcular o SHA-256 de uma string usando a classe Sha256
 def calculate_sha256(input_string):
     sha256 = Sha256(input_string.encode('utf-8'))
     return sha256.hexdigest()
 
-# Calculando o SHA-256 da string '123456'
-result = calculate_sha256('aaa')
-print("SHA-256 da string:", result)
+# Função para decodificar um hash SHA-256 usando força bruta
+def reverse_engineer_sha256(target_hash, charset, maxlength):
+    import itertools
+    sha256 = Sha256()
+    for length in range(1, maxlength + 1):
+        for attempt in itertools.product(charset, repeat=length):
+            attempt_str = ''.join(attempt)
+            if calculate_sha256(attempt_str) == target_hash:
+                return attempt_str
+    return None
+
+# Usando a função reverse_engineer_sha256 para decodificar o hash
+def reverse_engineer_main_menu():
+    while True:
+        print("\n=== Menu de Engenharia Reversa ===")
+        print("1. Calcular SHA-256 de uma string")
+        print("2. Decodificar um hash SHA-256")
+        print("3. Sair")
+
+        choice = input("Escolha uma opção: ")
+
+        if choice == '1':
+            input_string = input("Digite a string a ser codificada: ")
+            result = calculate_sha256(input_string)
+            print("SHA-256 da string:", result)
+        elif choice == '2':
+            input_hash = input("Digite o hash SHA-256 a ser decodificado: ")
+            print("Tentando decodificar o hash...")
+            decoded_string = reverse_engineer_sha256(input_hash, charset, 6)  # Tentando strings de até 6 caracteres
+            if decoded_string:
+                print("String decodificada:", decoded_string)
+            else:
+                print("Não foi possível decodificar a string.")
+        elif choice == '3':
+            print("Saindo...")
+            break
+        else:
+            print("Opção inválida. Por favor, escolha uma opção válida.")
+
+if __name__ == "__main__":
+    reverse_engineer_main_menu()
+
+
