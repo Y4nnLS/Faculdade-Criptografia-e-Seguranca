@@ -173,7 +173,7 @@ def main():
     Função principal que recebe a entrada do usuário, calcula o hash SHA-256 e exibe o resultado.
     """
     user_input = input("Digite a string que deseja codificar: ")
-    hasher =     hasher = Sha256()
+    hasher = Sha256()
     hasher.update(user_input.encode())
     result_hex = hasher.hexdigest()
     print("Resultado da codificação SHA-256:", result_hex)
