@@ -1,4 +1,12 @@
 class Sha256:
+    """
+    Classe que implementa o algoritmo SHA-256 para geração de hashes criptografados.
+
+    Attributes:
+        ks (list): Lista de constantes usadas durante a compressão.
+        hs (list): Lista de valores iniciais do hash.
+        M32 (int): Máscara para limitar operações a 32 bits.
+    """
     ks = [
         0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
         0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -25,17 +33,29 @@ class Sha256:
 
     M32 = 0xFFFFFFFF
 
-    def __init__(self, m=None):
+    def __init__(self):
+        """
+        Inicializa o objeto Sha256.
+        
+        Inicializa o estado interno e as variáveis necessárias para o cálculo do hash.
+        """
         self.mlen = 0
         self.buf = b''
         self.k = self.ks[:]
         self.h = self.hs[:]
         self.fin = False
-        if m is not None:
-            self.update(m)
 
     @staticmethod
     def pad(mlen):
+        """
+        Preenche a mensagem de entrada de acordo com as especificações do algoritmo SHA-256.
+
+        Args:
+            mlen (int): Comprimento original da mensagem em bytes.
+
+        Returns:
+            bytes: Mensagem preenchida.
+        """
         mdi = mlen & 0x3F
         length = (mlen << 3).to_bytes(8, 'big')
         padlen = 55 - mdi if mdi < 56 else 119 - mdi
@@ -43,6 +63,16 @@ class Sha256:
 
     @staticmethod
     def ror(x, y):
+        """
+        Realiza uma rotação para a direita (right rotation) em um valor de 32 bits.
+
+        Args:
+            x (int): Valor a ser rotacionado.
+            y (int): Quantidade de bits a serem rotacionados.
+
+        Returns:
+            int: Valor rotacionado.
+        """
         return ((x >> y) | (x << (32 - y))) & Sha256.M32
 
     @staticmethod
@@ -54,8 +84,17 @@ class Sha256:
         return (x & y) ^ ((~x) & z)
 
     def compress(self, c):
+        """
+        Comprime um bloco de mensagem de 512 bits.
+
+        Args:
+            c (bytes): Bloco de mensagem de 512 bits.
+
+        Returns:
+            None
+        """
         w = [0] * 64
-        w[0:16] = [int.from_bytes(c[i: i + 4], 'big') for i in range(0, len(c), 4)]
+        w[0:16] = [int.from_bytes(c[i:i + 4], 'big') for i in range(0, len(c), 4)]
 
         for i in range(16, 64):
             s0 = self.ror(w[i - 15], 7) ^ self.ror(w[i - 15], 18) ^ (w[i - 15] >> 3)
@@ -83,20 +122,35 @@ class Sha256:
             self.h[i] = (x + y) & self.M32
 
     def update(self, m):
+        """
+        Atualiza o estado interno do hash com a entrada fornecida.
+
+        Args:
+            m (bytes): Mensagem a ser processada.
+
+        Returns:
+            None
+        """
         if m is None or len(m) == 0:
             return
 
-        assert not self.fin, 'Hash already finalized and cannot be updated!'
+        assert not self.fin, 'Hash already finalized and can not be updated!'
 
         self.mlen += len(m)
         m = self.buf + m
 
         for i in range(0, len(m) // 64):
-            self.compress(m[64 * i: 64 * (i + 1)])
+            self.compress(m[64 * i:64 * (i + 1)])
 
         self.buf = m[len(m) - (len(m) % 64):]
 
     def digest(self):
+        """
+        Calcula o hash final da mensagem e retorna-o em formato de bytes.
+
+        Returns:
+            bytes: Hash final.
+        """
         if not self.fin:
             self.update(self.pad(self.mlen))
             self.digest = b''.join(x.to_bytes(4, 'big') for x in self.h[:8])
@@ -104,62 +158,25 @@ class Sha256:
         return self.digest
 
     def hexdigest(self):
+        """
+        Calcula o hash final da mensagem e retorna-o em formato hexadecimal.
+
+        Returns:
+            str: Hash final em formato hexadecimal.
+        """
         tab = '0123456789abcdef'
         return ''.join(tab[b >> 4] + tab[b & 0xF] for b in self.digest())
 
-# Classe Sha256 e definições de funções permanecem as mesmas
 
-# Define o conjunto de caracteres possíveis para tentativa de força bruta
-# Classe Sha256 e definições de funções permanecem as mesmas
+def main():
+    """
+    Função principal que recebe a entrada do usuário, calcula o hash SHA-256 e exibe o resultado.
+    """
+    user_input = input("Digite a string que deseja codificar: ")
+    hasher = Sha256()
+    hasher.update(user_input.encode())
+    result_hex = hasher.hexdigest()
+    print("Resultado da codificação SHA-256:", result_hex)
 
-# Define o conjunto de caracteres possíveis para tentativa de força bruta
-charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-
-# Função para calcular o SHA-256 de uma string usando a classe Sha256
-def calculate_sha256(input_string):
-    sha256 = Sha256(input_string.encode('utf-8'))
-    return sha256.hexdigest()
-
-# Função para decodificar um hash SHA-256 usando força bruta
-def reverse_engineer_sha256(target_hash, charset, maxlength):
-    import itertools
-    sha256 = Sha256()
-    for length in range(1, maxlength + 1):
-        for attempt in itertools.product(charset, repeat=length):
-            attempt_str = ''.join(attempt)
-            if calculate_sha256(attempt_str) == target_hash:
-                return attempt_str
-    return None
-
-# Usando a função reverse_engineer_sha256 para decodificar o hash
-def reverse_engineer_main_menu():
-    while True:
-        print("\n=== Menu de Engenharia Reversa ===")
-        print("1. Calcular SHA-256 de uma string")
-        print("2. Decodificar um hash SHA-256")
-        print("3. Sair")
-
-        choice = input("Escolha uma opção: ")
-
-        if choice == '1':
-            input_string = input("Digite a string a ser codificada: ")
-            result = calculate_sha256(input_string)
-            print("SHA-256 da string:", result)
-        elif choice == '2':
-            input_hash = input("Digite o hash SHA-256 a ser decodificado: ")
-            print("Tentando decodificar o hash...")
-            decoded_string = reverse_engineer_sha256(input_hash, charset, 6)  # Tentando strings de até 6 caracteres
-            if decoded_string:
-                print("String decodificada:", decoded_string)
-            else:
-                print("Não foi possível decodificar a string.")
-        elif choice == '3':
-            print("Saindo...")
-            break
-        else:
-            print("Opção inválida. Por favor, escolha uma opção válida.")
-
-if __name__ == "__main__":
-    reverse_engineer_main_menu()
-
-
+if __name__ == '__main__':
+    main()
